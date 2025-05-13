@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanilla ChatBot</title>
+    <style>
+        :root {
+            --primary-color: #8A2BE2;
+            --primary-dark: #6A1B9A;
+            --primary-light: #B388FF;
+            --background-dark: #121212;
+            --surface-dark: #1E1E1E;
+            --card-dark: #252525;
+            --text-primary: #E0E0E0;
+            --text-secondary: #AAAAAA;
+            --text-bot: #9EE5FF;
+            --text-user: #FFFFFF;
+            --error-color: #CF6679;
+            --success-color: #4CAF50;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--background-dark), #1A1A2E);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #9C27B0, #3F51B5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0px 2px 8px rgba(156, 39, 176, 0.3);
+            position: relative;
+            display: inline-block;
+        }
+        
+        /* Shooting star underline */
+        header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+            border-radius: 2px;
+        }
+        
+        .shooting-star {
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 15px;
+            height: 2px;
+            background: white;
+            border-radius: 100px;
+            filter: blur(1px);
+            animation: shootingStar 3s linear infinite;
+            opacity: 0;
+            box-shadow: 
+                0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 15px var(--primary-light),
+                0 0 30px var(--primary-light);
+        }
+        
+        @keyframes shootingStar {
+            0% {
+                transform: translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        .api-key-container {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .api-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .form-group {
+            flex: 1 1 300px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23AAAAAA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 13px 15px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-group {
+            flex: 0 0 auto;
+        }
+        
+        .status {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .chat-container {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            height: 65vh;
+            position: relative;
+        }
+        
+        /* Animated border */
+        .border-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .moving-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            filter: blur(2px);
+            box-shadow: 
+                0 0 5px var(--primary-light),
+                0 0 10px var(--primary-light);
+            animation: moveDot 8s linear infinite;
+        }
+        
+        @keyframes moveDot {
+            0% {
+                top: 0;
+                left: 0;
+            }
+            25% {
+                top: 0;
+                left: 100%;
+                transform: translateX(-100%);
+            }
+            50% {
+                top: 100%;
+                left: 100%;
+                transform: translate(-100%, -100%);
+            }
+            75% {
+                top: 100%;
+                left: 0;
+                transform: translateY(-100%);
+            }
+            100% {
+                top: 0;
+                left: 0;
+            }
+        }
+        
+        .chat-header {
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 15px 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chat-header svg {
+            margin-right: 10px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-dark) var(--card-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(138, 43, 226, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 60%, rgba(63, 81, 181, 0.05) 0%, transparent 20%);
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--card-dark);
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background-color: rgba(138, 43, 226, 0.5);
+            border-radius: 6px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+            word-break: break-word;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-user);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            margin-left: 20%;
+            box-shadow: 0 2px 10px rgba(138, 43, 226, 0.2);
+        }
+        
+        .bot-message {
+            background: var(--card-dark);
+            color: var(--text-bot);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            margin-right: 20%;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bot-message a {
+            color: var(--primary-light);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--primary-light);
+        }
+        
+        .bot-message code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #FFD700;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--card-dark);
+        }
+        
+        #message-input {
+            flex-grow: 1;
+            padding: 15px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-right: 10px;
+        }
+        
+        #send-button {
+            width: auto;
+            border-radius: 24px;
+            padding: 12px 25px;
+        }
+        
+        .thinking {
+            align-self: flex-start;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 8px 12px;
+            background: var(--card-dark);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 60%;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .dot-flashing {
+            position: relative;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+            animation: dot-flashing 1s infinite linear alternate;
+            animation-delay: 0.5s;
+        }
+        
+        .dot-flashing::before, .dot-flashing::after {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+        }
+        
+        .dot-flashing::before {
+            left: -10px;
+            animation: dot-flashing 1s infinite alternate;
+            animation-delay: 0s;
+        }
+        
+        .dot-flashing::after {
+            left: 10px;
+            animation: dot-flashing 1s infinite alternate;
+            animation-delay: 1s;
+        }
+        
+        @keyframes dot-flashing {
+            0% { background-color: var(--text-secondary); }
+            50%, 100% { background-color: rgba(170, 170, 170, 0.2); }
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .api-form {
+                flex-direction: column;
+            }
+            
+            .form-group, .btn-group {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Vanilla ChatBot</h1>
+            <div class="shooting-star"></div>
+            <p>Secure chat interface powered by Gemini AI</p>
+        </header>
+        
+        <div class="api-key-container">
+            <div class="api-form">
+                <div class="form-group">
+                    <label for="api-key-input">API Key</label>
+                    <input type="password" id="api-key-input" placeholder="Enter your Gemini API Key" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="model-select">AI Model</label>
+                    <select id="model-select">
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
+                    </select>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="save-api-key">Connect</button>
+                </div>
+            </div>
+            <div class="status" id="api-status">Please enter your API key to start chatting</div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="border-animation">
+                <div class="moving-dot"></div>
+            </div>
+            
+            <div class="chat-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Vanilla ChatBot
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    Welcome to Vanilla ChatBot! Enter your API key above to start chatting with Gemini AI.
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Type your message..." disabled>
+                <button id="send-button" disabled>Send</button>
+            </div>
+        </div>
+        
+        <footer>
+            &copy; 2025 Vanilla ChatBot - Your messages stay in your browser
+        </footer>
+    </div>
+    
+    <script>
+        // Elements
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key');
+        const apiStatus = document.getElementById('api-status');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const modelSelect = document.getElementById('model-select');
+        const shootingStar = document.querySelector('.shooting-star');
+        
+        // Shooting star animation timing
+        function animateShootingStar() {
+            shootingStar.style.animation = 'none';
+            shootingStar.offsetHeight; // Force reflow
+            shootingStar.style.animation = 'shootingStar 3s linear infinite';
+        }
+        
+        setInterval(animateShootingStar, 3500); // Start animation and repeat
+        animateShootingStar(); // Start immediately
+        
+        // Variables - storing only in memory, not localStorage for security
+        let apiKey = '';
+        let selectedModel = 'gemini-1.5-pro';
+        
+        // Event listeners
+        saveApiKeyBtn.addEventListener('click', saveApiKey);
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        modelSelect.addEventListener('change', function() {
+            selectedModel = modelSelect.value;
+        });
+        
+        // Functions
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                apiKey = key;
+                // Not saving API key to localStorage for security
+                apiStatus.textContent = 'Connected! Your API key is stored only in memory during this session.';
+                apiStatus.style.color = 'var(--success-color)';
+                enableChat();
+            } else {
+                apiStatus.textContent = 'Please enter a valid API Key';
+                apiStatus.style.color = 'var(--error-color)';
+            }
+        }
+        
+        function enableChat() {
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+            messageInput.focus();
+        }
+        
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+            
+            // Format the message with basic MD-like parsing
+            if (!isUser) {
+                // Format code sections
+                text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                // Format links
+                text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+            }
+            
+            messageDiv.innerHTML = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addThinkingIndicator() {
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.classList.add('thinking');
+            thinkingDiv.id = "thinking-indicator";
+            
+            const thinkingText = document.createElement('span');
+            thinkingText.textContent = "Thinking";
+            
+            const dotFlashing = document.createElement('div');
+            dotFlashing.classList.add('dot-flashing');
+            
+            thinkingDiv.appendChild(thinkingText);
+            thinkingDiv.appendChild(dotFlashing);
+            
+            chatMessages.appendChild(thinkingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function removeThinkingIndicator() {
+            const thinkingDiv = document.getElementById('thinking-indicator');
+            if (thinkingDiv) {
+                thinkingDiv.remove();
+            }
+        }
+        
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, true);
+            messageInput.value = '';
+            
+            // Show thinking indicator
+            addThinkingIndicator();
+            
+            try {
+                const response = await fetchGeminiResponse(message);
+                removeThinkingIndicator();
+                addMessage(response, false);
+            } catch (error) {
+                removeThinkingIndicator();
+                addMessage("Error: " + error.message, false);
+                console.error("Error fetching response:", error);
+            }
+        }
+        
+        async function fetchGeminiResponse(message) {
+            // Updated URL with the correct API endpoint and model name
+            const url = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${apiKey}`;
+            
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: message
+                    }]
+                }]
+            };
+            
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Extract the response text from the API response format
+                if (data.candidates && data.candidates.length > 0 && 
+                    data.candidates[0].content && 
+                    data.candidates[0].content.parts && 
+                    data.candidates[0].content.parts.length > 0) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("Invalid response format");
+                }
+            } catch (error) {
+                throw error;
+            }
+        }
+        
+        // Clear any previous API key on page reload
+        window.addEventListener('load', function() {
+            apiKey = '';
+            apiKeyInput.value = '';
+        });
+        
+        // Clear API key when window/tab is closed
+        window.addEventListener('unload', function() {
+            apiKey = '';
+        });
+    </script>
+</body>
+</html>
